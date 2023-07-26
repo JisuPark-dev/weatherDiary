@@ -2,32 +2,29 @@ package zerobase.weather.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
-import org.apache.tomcat.jni.Local;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
+import zerobase.weather.WeatherApplication;
 import zerobase.weather.domain.DateWeather;
 import zerobase.weather.domain.Diary;
-import zerobase.weather.dto.ErrorResponse;
 import zerobase.weather.exception.WeatherException;
 import zerobase.weather.repository.DateWeatherRepository;
 import zerobase.weather.repository.DiaryRepository;
-import zerobase.weather.type.ErrorCode;
-
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -36,7 +33,6 @@ import static zerobase.weather.type.ErrorCode.CANNOT_GET_WEATHER_DATA_FROM_API;
 import static zerobase.weather.type.ErrorCode.WEATHER_DATA_PARSING_ERROR;
 
 @Service
-@Slf4j
 @RequiredArgsConstructor
 public class DiaryService {
 
@@ -46,18 +42,22 @@ public class DiaryService {
     @Value("${openweathermap.key}")
     private String apiKey;
 
+    // 로거 생성
+    private static final Logger logger = LoggerFactory.getLogger(WeatherApplication.class);
+
     @Transactional
     @Scheduled(cron = "0 0 1 * * *")
     // 매일 오전 1시에 그 날의 날씨 정보로서 저장
     // -> 이제 날씨일기 작성시 매번 api 호출하지 않고 저장된 날씨정보로 부터 꺼내서 사용
     public void saveWeatherDate() {
+        logger.info("오늘도 날씨 데이터 잘 가져옴");
         dateWeatherRepository.save(getWeatherFromApi());
     }
 
     private DateWeather getWeatherFromApi() {
         // weather 정보 받아오기
         String jsonString = getWeatherString();
-        log.info(jsonString);
+        logger.info(jsonString);
         // 정보 파싱하기
         Map<String, Object> parseWeather = parseWeather(jsonString);
         // date_weather에 값 저장하기
@@ -72,10 +72,12 @@ public class DiaryService {
 
     @Transactional(isolation = Isolation.READ_COMMITTED)
     public void createDiary(LocalDate date, String text) {
+        logger.info("started to created diary");
         // 날씨 데이터 가져오기
         DateWeather dateWeather = getDateWeather(date);
         // 날씨 값 + 일기 값 db에 저장하기
         saveDiary(date, text, dateWeather);
+        logger.info("end to created diary");
     }
 
     private DateWeather getDateWeather(LocalDate date) {
@@ -91,6 +93,7 @@ public class DiaryService {
 
     @Transactional(readOnly = true)
     public List<Diary> readDiary(LocalDate date) {
+        logger.debug("read diary");
         return diaryRepository.findAllByDate(date);
     }
 
@@ -106,12 +109,13 @@ public class DiaryService {
     }
 
     public void deleteDiary(LocalDate date) {
+        logger.error("delete diary");
         diaryRepository.deleteAllByDate(date);
     }
 
     private String getWeatherString() {
         String apiUrl = "https://api.openweathermap.org/data/2.5/weather?q=seoul&appid="+apiKey;
-        log.info(apiUrl);
+        logger.info(apiUrl);
         try {
             URL url = new URL(apiUrl);
             // 해당 url로 http 연결 생성
