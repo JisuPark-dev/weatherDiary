@@ -1,7 +1,7 @@
 [2022-06-19 17:32:02:16176][http-nio-8080-exec-1] ERROR o.a.c.c.C.[.[.[.[dispatcherServlet] - Servlet.service() for servlet [dispatcherServlet] in context with path [] threw exception [Request processing failed; nested exception is zerobase.weather.error.InvalidDate: 너무 과거 혹은 미래의 날짜입니다] with root cause
 zerobase.weather.error.InvalidDate: 너무 과거 혹은 미래의 날짜입니다
-	at zerobase.weather.service.DiaryService.readDiary(DiaryService.java:94)
-	at zerobase.weather.service.DiaryService$$FastClassBySpringCGLIB$$28de523a.invoke(<generated>)
+	at zerobase.weather.service.DiaryServiceImpl.readDiary(DiaryService.java:94)
+	at zerobase.weather.service.DiaryServiceImpl$$FastClassBySpringCGLIB$$28de523a.invoke(<generated>)
 	at org.springframework.cglib.proxy.MethodProxy.invoke(MethodProxy.java:218)
 	at org.springframework.aop.framework.CglibAopProxy$CglibMethodInvocation.invokeJoinpoint(CglibAopProxy.java:783)
 	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:163)
@@ -12,7 +12,7 @@ zerobase.weather.error.InvalidDate: 너무 과거 혹은 미래의 날짜입니�
 	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:186)
 	at org.springframework.aop.framework.CglibAopProxy$CglibMethodInvocation.proceed(CglibAopProxy.java:753)
 	at org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor.intercept(CglibAopProxy.java:698)
-	at zerobase.weather.service.DiaryService$$EnhancerBySpringCGLIB$$b8eceae7.readDiary(<generated>)
+	at zerobase.weather.service.DiaryServiceImpl$$EnhancerBySpringCGLIB$$b8eceae7.readDiary(<generated>)
 	at zerobase.weather.controller.DiaryController.readDiary(DiaryController.java:26)
 	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
 	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)

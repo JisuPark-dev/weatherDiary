@@ -35,4 +35,5 @@
 - api 사용료 절감 가능
 ### 3. logback 을 이용하여 프로젝트에 로그 기록
 ### 4. ExceptionHandler 을 이용한 예외처리
-### 5. swagger 을 이용하여 API documentation
+### 5. swagger 을 이용하여 API documentation 작성
+### 6. DiaryService의 경우 확장성을 고려하여 인터페이스로 구현함. 
