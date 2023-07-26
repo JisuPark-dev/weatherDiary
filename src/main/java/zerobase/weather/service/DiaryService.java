@@ -9,12 +9,15 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
+import zerobase.weather.domain.DateWeather;
 import zerobase.weather.domain.Diary;
 import zerobase.weather.dto.ErrorResponse;
 import zerobase.weather.exception.WeatherException;
+import zerobase.weather.repository.DateWeatherRepository;
 import zerobase.weather.repository.DiaryRepository;
 import zerobase.weather.type.ErrorCode;
 
@@ -38,19 +41,52 @@ import static zerobase.weather.type.ErrorCode.WEATHER_DATA_PARSING_ERROR;
 public class DiaryService {
 
     private final DiaryRepository diaryRepository;
+    private final DateWeatherRepository dateWeatherRepository;
 
     @Value("${openweathermap.key}")
     private String apiKey;
 
-    @Transactional(isolation = Isolation.READ_COMMITTED)
-    public void createDiary(LocalDate date, String text) {
+    @Transactional
+    @Scheduled(cron = "0 0 1 * * *")
+    // 매일 오전 1시에 그 날의 날씨 정보로서 저장
+    // -> 이제 날씨일기 작성시 매번 api 호출하지 않고 저장된 날씨정보로 부터 꺼내서 사용
+    public void saveWeatherDate() {
+        dateWeatherRepository.save(getWeatherFromApi());
+    }
+
+    private DateWeather getWeatherFromApi() {
         // weather 정보 받아오기
         String jsonString = getWeatherString();
         log.info(jsonString);
         // 정보 파싱하기
         Map<String, Object> parseWeather = parseWeather(jsonString);
+        // date_weather에 값 저장하기
+        return DateWeather.builder()
+                .date(LocalDate.now())
+                .weather(parseWeather.get("main").toString())
+                .icon(parseWeather.get("icon").toString())
+                .temperature((Double)parseWeather.get("temp"))
+                .build();
+    }
+
+
+    @Transactional(isolation = Isolation.READ_COMMITTED)
+    public void createDiary(LocalDate date, String text) {
+        // 날씨 데이터 가져오기
+        DateWeather dateWeather = getDateWeather(date);
         // 날씨 값 + 일기 값 db에 저장하기
-        saveDiary(date, text, parseWeather);
+        saveDiary(date, text, dateWeather);
+    }
+
+    private DateWeather getDateWeather(LocalDate date) {
+        List<DateWeather> dateWeatherFromDB = dateWeatherRepository.findAllByDate(date);
+        if (dateWeatherFromDB.size() == 0) {
+            // 새로 api에서 날씨 정보를 가져와야 한다.
+            // 정책 상 현재 날씨를 가져오도록 한다.
+            return getWeatherFromApi();
+        }else{
+            return dateWeatherFromDB.get(0);
+        }
     }
 
     @Transactional(readOnly = true)
@@ -125,11 +161,11 @@ public class DiaryService {
         return resultMap;
     }
 
-    private void saveDiary(LocalDate date, String text, Map<String, Object> parseWeather) {
+    private void saveDiary(LocalDate date, String text, DateWeather dateWeather) {
         Diary nowDiary = Diary.builder()
-                .weather(parseWeather.get("main").toString())
-                .icon(parseWeather.get("icon").toString())
-                .temperature((Double) parseWeather.get("temp"))
+                .weather(dateWeather.getWeather())
+                .icon(dateWeather.getIcon())
+                .temperature(dateWeather.getTemperature())
                 .text(text)
                 .date(date)
                 .build();
