@@ -10,13 +10,15 @@ import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Transactional;
 import zerobase.weather.domain.Diary;
 import zerobase.weather.dto.ErrorResponse;
 import zerobase.weather.exception.WeatherException;
 import zerobase.weather.repository.DiaryRepository;
 import zerobase.weather.type.ErrorCode;
 
-import javax.transaction.Transactional;
+
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
@@ -33,7 +35,6 @@ import static zerobase.weather.type.ErrorCode.WEATHER_DATA_PARSING_ERROR;
 @Service
 @Slf4j
 @RequiredArgsConstructor
-@Transactional
 public class DiaryService {
 
     private final DiaryRepository diaryRepository;
@@ -41,6 +42,7 @@ public class DiaryService {
     @Value("${openweathermap.key}")
     private String apiKey;
 
+    @Transactional(isolation = Isolation.READ_COMMITTED)
     public void createDiary(LocalDate date, String text) {
         // weather 정보 받아오기
         String jsonString = getWeatherString();
@@ -51,10 +53,12 @@ public class DiaryService {
         saveDiary(date, text, parseWeather);
     }
 
+    @Transactional(readOnly = true)
     public List<Diary> readDiary(LocalDate date) {
         return diaryRepository.findAllByDate(date);
     }
 
+    @Transactional(readOnly = true)
     public List<Diary> readDiaries(LocalDate startDate, LocalDate endDate) {
         return diaryRepository.findALlByDateBetween(startDate, endDate);
     }

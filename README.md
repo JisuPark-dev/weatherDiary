@@ -1,5 +1,7 @@
-# weatherDiary
-날씨일기 프로젝트
+# 🌦️ WeatherDiary
+## 날씨일기 프로젝트
+### 그날의 날씨와 함께 일기 작성하기
+### 일시: 7.25~ 7.27
 
 # API 명세서
 ## ✅ POST / create / diary
@@ -23,3 +25,6 @@
 ## ✅ DELETE / delete / diary
 - date parameter 로 삭제할 날짜를 받아주세요.
 - 해당 날짜의 모든 일기를 지워주세요.
+
+# 🤹‍♂️ 주요 기술 구현
+### 1. Transaction을 활용
