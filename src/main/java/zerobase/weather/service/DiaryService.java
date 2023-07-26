@@ -1,7 +1,6 @@
 package zerobase.weather.service;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -19,6 +18,7 @@ import zerobase.weather.domain.Diary;
 import zerobase.weather.exception.WeatherException;
 import zerobase.weather.repository.DateWeatherRepository;
 import zerobase.weather.repository.DiaryRepository;
+import zerobase.weather.type.ErrorCode;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -29,8 +29,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static zerobase.weather.type.ErrorCode.CANNOT_GET_WEATHER_DATA_FROM_API;
-import static zerobase.weather.type.ErrorCode.WEATHER_DATA_PARSING_ERROR;
 
 @Service
 @RequiredArgsConstructor
@@ -94,6 +92,9 @@ public class DiaryService {
     @Transactional(readOnly = true)
     public List<Diary> readDiary(LocalDate date) {
         logger.debug("read diary");
+        if (date.isAfter(LocalDate.ofYearDay(2050, 1))) {
+            throw new WeatherException(ErrorCode.DATE_IS_TOO_FAR_IN_FUTURE);
+        }
         return diaryRepository.findAllByDate(date);
     }
 
@@ -141,7 +142,7 @@ public class DiaryService {
             br.close();
             return response.toString();
         } catch (Exception e) {
-            throw new WeatherException(CANNOT_GET_WEATHER_DATA_FROM_API);
+            throw new WeatherException(ErrorCode.CANNOT_GET_WEATHER_DATA_FROM_API);
         }
     }
 
@@ -152,7 +153,7 @@ public class DiaryService {
         try {
             jsonObject = (JSONObject) jsonParser.parse(jsonString);
         } catch (ParseException e) {
-            throw new WeatherException(WEATHER_DATA_PARSING_ERROR);
+            throw new WeatherException(ErrorCode.WEATHER_DATA_PARSING_ERROR);
         }
         Map<String, Object> resultMap = new HashMap<>();
 
